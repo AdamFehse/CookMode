@@ -1,13 +1,20 @@
 const CACHE_NAME = 'recipecard-static-v1';
+
+// Get the base path dynamically from the service worker's location
+const BASE_PATH = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/') + 1);
+
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/main.js',
-  '/idb.js',
-  '/manifest.json',
-  '/android-chrome-512x512.png',
-  'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js'
+  `${BASE_PATH}`,
+  `${BASE_PATH}index.html`,
+  `${BASE_PATH}styles.css`,
+  `${BASE_PATH}main.js`,
+  `${BASE_PATH}idb.js`,
+  `${BASE_PATH}methods.js`,
+  `${BASE_PATH}manifest.json`,
+  `${BASE_PATH}android-chrome-512x512.png`,
+  'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'
 ];
 
 self.addEventListener('install', (e)=>{
@@ -28,7 +35,7 @@ self.addEventListener('fetch', (e)=>{
       const copy = res.clone();
       caches.open(CACHE_NAME).then(cache=>cache.put(req, copy));
       return res;
-    }).catch(()=> caches.match('/index.html')));
+    }).catch(()=> caches.match(`${BASE_PATH}index.html`)));
     return;
   }
 
@@ -39,5 +46,5 @@ self.addEventListener('fetch', (e)=>{
       caches.open(CACHE_NAME).then(cache=>cache.put(req, copy));
     }
     return res;
-  }).catch(()=> caches.match('/index.html'))));
+  }).catch(()=> caches.match(`${BASE_PATH}index.html`))));
 });
