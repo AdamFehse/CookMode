@@ -1,5 +1,8 @@
 🍴 Recipe Cards for The Tasteful Kitchen
 
+Play with it <a href="https://adamfehse.github.io/CookMode/">HERE</a>!
+
+
 When the moon hits your eye like a big pizza pie, it’s... <img src="https://github.githubassets.com/images/icons/emoji/unicode/1f618.png" width="80" height="80"> amore!
 
 ✨ For the cooks. By the cooks. ✨

@@ -1,11 +1,12 @@
 {
   "name": "Recipe Card — Kitchen",
   "short_name": "RecipeCard",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0077cc",
   "icons": [
-    { "src": "android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "./android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
