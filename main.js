@@ -193,9 +193,6 @@
           <div class="small text-monospace text-muted mt-1">slug: <code>${escapeHtml(
             d.id
           )}</code>
-            <button type="button" data-slug="${
-              d.id
-            }" class="btn btn-outline-secondary btn-sm ms-2 copy-slug" title="Copy slug">Copy</button>
           </div>
         </div>
         <div class="mt-3 d-flex justify-content-between align-items-center">
