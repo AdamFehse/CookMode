@@ -1,57 +1,49 @@
-🍴 Recipe Cards for The Tasteful Kitchen 😘
+🍴 Recipe Cards for The Tasteful Kitchen
 
 ✨ For the cooks. By the cooks. ✨
 
-When the moon hits your eye like a big pizza pie, it’s...
-<img src="https://github.githubassets.com/images/icons/emoji/unicode/1f618.png" width="80" height="80"> amore!
+What is this?
 
-🌿 What is this?
+A simple way to turn our SHOP sheet into interactive recipe cards:
 
-A simple, beautiful way to turn our SHOP sheet into interactive recipe cards:
+ Clear, precise instructions
 
-📖 Clear & precise instructions
+ Recipe images for easy reference
 
-🖼️ Recipe images for easy reference
+ Built-in slider to adjust quantities on the fly
 
-🎚️ Built-in slider to adjust quantities on the fly
+ Just upload the SHOP sheet → get instant recipe cards
 
-📂 Just upload the SHOP sheet → get instant recipe cards
+How it Works
 
-🍫 Example
+Upload the SHOP sheet
 
-Brownies + Cheesecake, scaled perfectly with the slider:
+Data parsing: Ingredients are pulled into categories (currently hardcoded, but flexible).
 
-🍫 Brownies  
-- 0.25 flax egg
-- 0.04 cup peanut butter  
-- 0.10 cup sugar  
-...
+Recipe modal rendering:
 
-🍰 Cheesecake  
-- 0.67 oz cream cheese  
-- 0.19 cup sugar  
-...
+Ingredient lists populate dynamically.
 
-🛠️ How it Works
+Step-by-step cooking instructions are loaded from methods.js.
 
-📤 Upload the SHOP sheet
+Each recipe entry in methods.js includes its instruction steps.
 
-🔄 Data parses into categories (currently hardcoded, but flexible)
+When you open a recipe modal, the correct method is matched and rendered in order.
 
-🖥️ Recipe cards are rendered inside a Bootstrap modal
+Scaling: Slide the scale → ingredient amounts update instantly.
 
-🎚️ Slide the scale → ingredient amounts update automatically
+Future Ideas
 
-🚀 Future Ideas
+ More images for each recipe
 
-📸 Add more images for each recipe
+ Auto-detect categories instead of hardcoding
 
-🧾 Auto-detect categories instead of hardcoding
+ Add true “cook mode” (step-by-step guided view)
 
-👩‍🍳 Add “cook mode” (step-by-step view)
-
-🎨 More fun styling & animations
+ More styling & animations for better kitchen usability
 
 ❤️ Vibes Matter Most
 
-This project is about making things fun and useful for cooks in the kitchen — not just devs behind the screen. Keep it light, keep it tasty, keep it amore. 🌙🍕✨
+This project is about making things fun and useful for cooks in the kitchen — not just devs behind the screen. Keep it light, keep it tasty, keep it…
+
+When the moon hits your eye like a big pizza pie, it’s… AMORE. 🌙🍕✨
