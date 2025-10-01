@@ -37,7 +37,7 @@ The vision: recipe cards that don’t just instruct, but connect cooks to the bi
 
 How it Works:
 
-Upload the SHOP sheet as a CSV. You can DL the CSV from the google sheet. We can use any format but CSV was easier for me to look at. But we can easliyl add support for PDF or whatever format google sheets on mobile makes you download. Or we can populate it for the user so they simple download it with everything done.
+Upload the SHOP sheet as a CSV. You can DL the CSV from the google sheet. We can use any format but CSV was easier for me to look at. But we can easily add support for PDF or whatever format google sheets on mobile makes you download. Or we can populate it for the user so they simple download it with everything done.
 
 Data parsing: Ingredients are pulled into categories (currently hardcoded, but flexible).
 
