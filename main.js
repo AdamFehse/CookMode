@@ -66,7 +66,7 @@
   window.addEventListener("load", async () => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js")
+        .register("./sw.js")
         .then(() => console.log("sw registered"));
     }
     const all = await getAllDishes();
