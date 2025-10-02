@@ -31,11 +31,13 @@ Future & Insights:
 
 Knowledge is power in the kitchen, too. With the same data powering recipes, we can unlock potential.
 
-Itegrate the PLAN sheet as well so each item will also display current STATUS, CHEF, etc
+Integrate the PLAN sheet as well so each item will also display current STATUS, CHEF, etc
 
 The vision: recipe cards that don’t just instruct, but connect cooks to the bigger picture AND TO EACH OTHER...
 
 How it Works:
+
+Totally phone and screen responsive layout.
 
 Upload the SHOP sheet as a CSV. You can DL the CSV from the google sheet. We can use any format but CSV was easier for me to look at. But we can easily add support for PDF or whatever format google sheets on mobile makes you download. Or we can populate it for the user so they simply download it with everything done.
 
