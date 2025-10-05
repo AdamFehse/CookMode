@@ -38,6 +38,7 @@
             <div class="d-flex gap-2 mb-2 align-items-center">
               <label class="btn btn-sm btn-primary mb-0 py-1" for="shopCsvFile">Upload CSV</label>
               <input id="shopCsvFile" type="file" accept="text/csv" style="display: none" />
+              <button id="downloadCsvBtn" class="btn btn-sm btn-outline-primary">Download CSV</button>
               <button id="clearData" class="btn btn-sm btn-outline-secondary">Clear Data</button>
               <button id="installBtn" class="btn btn-sm btn-success ms-auto" style="display: none">Install</button>
               <div id="shopStatus" role="status" aria-live="polite" class="ms-3 small"></div>
@@ -60,7 +61,6 @@
             </div>
 
             
-
             <section id="dishList" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3" aria-live="polite">
               <!-- dish cards populated here -->
             </section>
@@ -127,6 +127,7 @@
             <div class="d-flex gap-2 mb-2 align-items-center">
               <label class="btn btn-sm btn-primary mb-0 py-1" for="planCsvFile">Upload PLAN</label>
               <input id="planCsvFile" type="file" accept="text/csv" style="display: none" />
+              <button id="downloadPlanCsvBtn" class="btn btn-sm btn-outline-primary">Download CSV</button>
               <button id="clearPlanData" class="btn btn-sm btn-outline-secondary">Clear PLAN</button>
               <div id="planStatus" role="status" aria-live="polite" class="ms-3 small"></div>
             </div>
@@ -135,15 +136,6 @@
             </div>
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div class="small text-muted">Kanban view: tasks grouped by DAY (up to 3 days)</div>
-              <div>
-                <label class="me-2 small">Priority:</label>
-                <select id="planPriorityFilter" class="form-select form-select-sm d-inline-block" style="width: 10rem">
-                  <option value="">All</option>
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
             </div>
 
             <!-- Kanban board container -->

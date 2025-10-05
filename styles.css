@@ -1,2 +1,76 @@
 
+/* Responsive styles for PLAN Kanban board */
+
+@media (max-width: 767.98px) {
+	#planBoard {
+		flex-direction: column !important;
+		display: flex !important;
+	}
+	#planBoard > .col-12 {
+		max-width: 100%;
+		flex: 1 1 100%;
+		margin-bottom: 1rem;
+	}
+	#planBoard .card {
+		min-width: 0;
+		width: 100%;
+	}
+	#planBoard .card-body {
+		padding: 0.75rem;
+	}
+	#planBoard .fw-bold {
+		font-size: 1rem;
+	}
+	#planBoard .small {
+		font-size: 0.9rem;
+	}
+	#planBoard .p-2 {
+		padding: 0.5rem !important;
+	}
+	#planBoard table {
+		font-size: 0.92rem;
+		min-width: 700px;
+		/* allow horizontal scroll */
+		display: block;
+		overflow-x: auto;
+		width: 100%;
+		border-collapse: separate;
+	}
+	#planBoard th, #planBoard td {
+		white-space: nowrap;
+		padding: 0.3rem 0.5rem;
+	}
+}
+
+@media (max-width: 575.98px) {
+	#planBoard .card-body {
+		padding: 0.5rem;
+	}
+	#planBoard .fw-bold {
+		font-size: 0.95rem;
+	}
+	#planBoard .small {
+		font-size: 0.85rem;
+	}
+	#planBoard table {
+		font-size: 0.85rem;
+		min-width: 600px;
+	}
+	#planBoard th, #planBoard td {
+		padding: 0.22rem 0.3rem;
+	}
+}
+
+@media (max-width: 575.98px) {
+	#planBoard .card-body {
+		padding: 0.5rem;
+	}
+	#planBoard .fw-bold {
+		font-size: 0.95rem;
+	}
+	#planBoard .small {
+		font-size: 0.85rem;
+	}
+}
+
 

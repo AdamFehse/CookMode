@@ -1,3 +1,82 @@
+// Save timeStart for a dish
+window.saveDishTimeStart = async function saveDishTimeStart(id, timeStart) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readwrite');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => {
+      const record = req.result ? { ...req.result } : { id };
+      record.timeStart = timeStart;
+      tx.objectStore(STORE_SETTINGS).put(record);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Get timeStart for a dish
+window.getDishTimeStart = async function getDishTimeStart(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readonly');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => resolve(req.result && req.result.timeStart ? req.result.timeStart : '');
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// Save timeEnd for a dish
+window.saveDishTimeEnd = async function saveDishTimeEnd(id, timeEnd) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readwrite');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => {
+      const record = req.result ? { ...req.result } : { id };
+      record.timeEnd = timeEnd;
+      tx.objectStore(STORE_SETTINGS).put(record);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Get timeEnd for a dish
+window.getDishTimeEnd = async function getDishTimeEnd(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readonly');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => resolve(req.result && req.result.timeEnd ? req.result.timeEnd : '');
+    req.onerror = () => reject(req.error);
+  });
+}
+// Save chef for a dish
+window.saveDishChef = async function saveDishChef(id, chef) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readwrite');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => {
+      const record = req.result ? { ...req.result } : { id };
+      record.chef = chef;
+      tx.objectStore(STORE_SETTINGS).put(record);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Get chef for a dish
+window.getDishChef = async function getDishChef(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readonly');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => resolve(req.result && req.result.chef ? req.result.chef : '');
+    req.onerror = () => reject(req.error);
+  });
+}
 // Save status for a dish
 window.saveDishStatus = async function saveDishStatus(id, status) {
   const db = await openDB();
@@ -127,7 +206,13 @@ window.getDishSliderValue = async function getDishSliderValue(id) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_SETTINGS, 'readonly');
     const req = tx.objectStore(STORE_SETTINGS).get(id);
-    req.onsuccess = () => resolve(req.result ? req.result.slider : null);
+    req.onsuccess = () => {
+      if (req.result && typeof req.result.slider !== 'undefined' && req.result.slider !== null) {
+        resolve(req.result.slider);
+      } else {
+        resolve(1); // Default to 1 if not set, for persistence
+      }
+    };
     req.onerror = () => reject(req.error);
   });
 }

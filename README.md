@@ -72,3 +72,14 @@ Future Ideas
 This project is about making things fun and useful for cooks in the kitchen — not just devs behind the screen. Keep it light, keep it tasty, keep it…
 
 AMORE. 🌙🍕✨
+
+---
+
+## Recent Updates
+
+- **PLAN Kanban Table**: Now fully responsive and mobile-friendly, with horizontal scroll for wide tables on small screens.
+- **Live & Persistent Fields**: STATUS, CHEF, ORDERS, TIME START, and TIME END are all live-editable and persist across reloads, both in the modal and the PLAN table.
+- **Chef Badge Colors**: Each chef now has a unique badge color, matching in both the modal and the PLAN table.
+- **Time Start/End**: Added dropdowns for Time Start and Time End in the modal, with values shown and editable in the PLAN table.
+- **CSV Export**: PLAN CSV export now includes the current, live values for all persistent fields.
+- **Accessibility**: Fixed duplicate form field IDs in the modal for better accessibility and validation.

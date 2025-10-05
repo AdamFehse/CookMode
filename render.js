@@ -68,6 +68,15 @@ export function renderPlanBoard(rows) {
       right.innerHTML = `<span class="badge ${prClass} ms-2">${escapeHtml(it['PRIORITY']||'')}</span>`;
       top.appendChild(left); top.appendChild(right);
       item.appendChild(top);
+      // Add chef badge area for live update
+      const chefBadgeArea = document.createElement('div');
+      chefBadgeArea.className = 'dish-chef-badge-area mt-2';
+      // Show chef badge if present
+      const chefVal = it['CHEF']||it['Chef']||'';
+      if (chefVal) {
+        chefBadgeArea.innerHTML = `<span class="badge bg-info text-dark">${escapeHtml(chefVal)}</span>`;
+      }
+      item.appendChild(chefBadgeArea);
       const meta = document.createElement('div'); meta.className = 'mt-2 small text-muted';
       meta.textContent = `Chef: ${it['CHEF']||it['Chef']||''} • ${it['TIME START']||''}–${it['TIME END']||''}`;
       item.appendChild(meta);
@@ -122,7 +131,6 @@ export function renderDishList(dishes, dishList, getDishSliderValue) {
         const statusOptions = [
           { value: '', label: 'No Status' },
           { value: 'not-yet-done', label: 'NOT YET DONE' },
-          { value: 'prepped', label: 'PREPPED' },
           { value: 'gathered-together', label: 'GATHERED TOGETHER' },
           { value: 'cooking', label: 'COOKING' },
           { value: 'ready-to-plate', label: 'READY TO PLATE' },
@@ -134,7 +142,6 @@ export function renderDishList(dishes, dishList, getDishSliderValue) {
         let badgeClass = 'badge ms-0 ';
         badgeClass +=
           (status === 'not-yet-done' ? 'bg-secondary' :
-           status === 'prepped' ? 'bg-info text-dark' :
            status === 'gathered-together' ? 'bg-warning text-dark' :
            status === 'cooking' ? 'bg-primary' :
            status === 'ready-to-plate' ? 'bg-success' :
