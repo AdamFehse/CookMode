@@ -1,7 +1,8 @@
 // Minimal IndexedDB helper
 const DB_NAME = 'recipecard-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_DISH = 'dishes';
+const STORE_PLAN = 'planRows';
 
 function openDB(){
   return new Promise((resolve, reject)=>{
@@ -12,9 +13,47 @@ function openDB(){
         const store = db.createObjectStore(STORE_DISH, { keyPath: 'id' });
         store.createIndex('byName', 'name', { unique: false });
       }
+      if(!db.objectStoreNames.contains(STORE_PLAN)){
+        db.createObjectStore(STORE_PLAN, { keyPath: 'rowid', autoIncrement: true });
+      }
     };
     req.onsuccess = ()=> resolve(req.result);
     req.onerror = ()=> reject(req.error);
+  });
+}
+// PLAN persistence helpers
+async function savePlanRows(rows){
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_PLAN, 'readwrite');
+    const store = tx.objectStore(STORE_PLAN);
+    store.clear();
+    for(const row of rows){
+      store.put(row);
+    }
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+
+async function getPlanRows(){
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_PLAN, 'readonly');
+    const store = tx.objectStore(STORE_PLAN);
+    const req = store.getAll();
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+
+async function clearPlanRows(){
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_PLAN, 'readwrite');
+    tx.objectStore(STORE_PLAN).clear();
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
   });
 }
 

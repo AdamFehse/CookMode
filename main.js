@@ -1,14 +1,199 @@
 // main.js — CSV upload, parse, store, UI
+// main.js — CSV upload, parse, store, UI
 (function () {
-  const csvInput = document.getElementById("csvFile");
-  const statusEl = document.getElementById("status");
+  // SHOP tab selectors (updated IDs)
+  const csvInput = document.getElementById("shopCsvFile");
+  const statusEl = document.getElementById("shopStatus");
   const dishList = document.getElementById("dishList");
   const recipeModalEl = document.getElementById("recipeModal");
   let recipeModal = null; // initialize lazily to avoid bootstrap timing issues
-  const search = document.getElementById("search");
+  const search = document.getElementById("shopSearch");
   const clearBtn = document.getElementById("clearData");
   const installBtn = document.getElementById("installBtn");
   let deferredPrompt = null;
+
+  // PLAN tab elements
+  const planCsvInput = document.getElementById('planCsvFile');
+  const planStatusEl = document.getElementById('planStatus');
+  const planSearch = document.getElementById('planSearch');
+  const planTable = document.getElementById('planTable');
+  const planTableBody = planTable ? planTable.querySelector('tbody') : null;
+  const planBoard = document.getElementById('planBoard');
+  const clearPlanBtn = document.getElementById('clearPlanData');
+  let planRows = [];
+  // PLAN status helper
+  function setPlanStatus(msg, err){
+    if(planStatusEl){
+      planStatusEl.textContent = msg || '';
+      planStatusEl.style.color = err ? 'crimson' : '';
+    }
+  }
+
+  // PLAN CSV upload and parsing (with persistence)
+  if(planCsvInput){
+    planCsvInput.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      setPlanStatus('Parsing PLAN CSV...');
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async function(results){
+          planRows = results.data;
+          try {
+            await savePlanRows(planRows);
+            setPlanStatus('PLAN CSV loaded and saved.');
+          } catch (err) {
+            setPlanStatus('PLAN CSV loaded, but failed to save: ' + err, true);
+          }
+          // render with current filters
+          if(typeof applyPlanFilters === 'function') applyPlanFilters();
+        },
+        error: function(err){ setPlanStatus('Parse error: '+err, true); }
+      });
+    });
+  }
+
+  // Load PLAN data from IndexedDB on page load
+  window.addEventListener('load', async () => {
+    // check for the kanban board container (we removed the old table)
+    if(planBoard) {
+      try {
+        const loaded = await getPlanRows();
+        if(loaded && loaded.length) {
+          planRows = loaded;
+          if(typeof applyPlanFilters === 'function') applyPlanFilters();
+          setPlanStatus('Loaded saved PLAN data.');
+        }
+      } catch (err) {
+        setPlanStatus('Could not load saved PLAN data: ' + err, true);
+      }
+    }
+  });
+
+  // Clear PLAN data button
+  if(clearPlanBtn){
+    clearPlanBtn.addEventListener('click', async () => {
+      if(!confirm('Clear all PLAN data?')) return;
+      try {
+        await clearPlanRows();
+  planRows = [];
+  renderPlanBoard([]);
+        setPlanStatus('PLAN data cleared.');
+      } catch (err) {
+        setPlanStatus('Failed to clear PLAN data: ' + err, true);
+      }
+    });
+  }
+
+  // PLAN search + priority filter
+  const priorityFilter = document.getElementById('planPriorityFilter');
+  function applyPlanFilters(){
+    const q = planSearch ? planSearch.value.trim().toLowerCase() : '';
+    const p = priorityFilter ? priorityFilter.value : '';
+    let filtered = planRows || [];
+    if(p) filtered = filtered.filter(r => String(r['PRIORITY']||'').toLowerCase() === p.toLowerCase());
+    if(q) filtered = filtered.filter(row => Object.values(row).some(val => String(val||'').toLowerCase().includes(q)));
+    renderPlanBoard(filtered);
+  }
+
+  if(planSearch){
+    planSearch.addEventListener('input', applyPlanFilters);
+  }
+  if(priorityFilter){
+    priorityFilter.addEventListener('change', applyPlanFilters);
+  }
+
+  // Render PLAN as a 3-column Kanban board grouped by DAY
+  function renderPlanBoard(rows){
+    const board = document.getElementById('planBoard');
+    if(!board) return;
+    board.innerHTML = '';
+    if(!rows || !rows.length){
+      board.innerHTML = '<div class="col-12 text-center text-muted py-5">No PLAN rows loaded.</div>';
+      return;
+    }
+
+    // Fixed 3-day view: Sunday, Monday, Tuesday
+    const desired = ['Sunday','Monday','Tuesday'];
+    // Group rows by the desired day (case-insensitive). Accept short forms (Sun, Mon, Tue).
+    const rowsByDay = {};
+    for(const d of desired) rowsByDay[d] = [];
+    for(const r of rows){
+      const raw = String(r['DAY'] || r['Day'] || r['day'] || '').trim();
+      const low = raw.toLowerCase();
+      if(!low) continue;
+      for(const d of desired){
+        const dl = d.toLowerCase();
+        if(low === dl || low.startsWith(dl) || low.includes(dl) || low.startsWith(dl.slice(0,3))){
+          rowsByDay[d].push(r);
+          break;
+        }
+      }
+    }
+    const days = desired.slice();
+
+    // Build columns
+    for(const day of days){
+      const col = document.createElement('div');
+      col.className = 'col-12 col-md-4';
+      const card = document.createElement('div');
+      card.className = 'card h-100';
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body d-flex flex-column';
+      const header = document.createElement('div');
+      header.className = 'd-flex justify-content-between align-items-center mb-3';
+      const title = document.createElement('h5'); title.className = 'mb-0';
+      title.textContent = day || 'No Day';
+  const count = document.createElement('span'); count.className = 'badge bg-secondary';
+  count.textContent = (rowsByDay[day] || []).length;
+      header.appendChild(title); header.appendChild(count);
+      cardBody.appendChild(header);
+
+      const list = document.createElement('div'); list.className = 'd-flex flex-column gap-2';
+  let items = rowsByDay[day] ? rowsByDay[day].slice() : [];
+      // sort by PRIORITY: High -> Medium -> Low -> unspecified
+      const priorityScore = (p) => {
+        const v = String(p||'').toLowerCase();
+        if(v === 'high') return 3;
+        if(v === 'medium') return 2;
+        if(v === 'low') return 1;
+        return 0;
+      };
+      items = items.slice().sort((a,b)=> {
+        const pa = priorityScore(a['PRIORITY']||a['Priority']||a['priority']);
+        const pb = priorityScore(b['PRIORITY']||b['Priority']||b['priority']);
+        if(pb !== pa) return pb - pa; // descending
+        // fallback: sort by TIME START if available
+        const ta = String(a['TIME START']||a['Time Start']||'');
+        const tb = String(b['TIME START']||b['Time Start']||'');
+        return ta.localeCompare(tb);
+      });
+      for(const it of items){
+        const item = document.createElement('div');
+        item.className = 'p-2 border rounded bg-white shadow-sm';
+        const top = document.createElement('div'); top.className = 'd-flex justify-content-between align-items-start gap-2';
+        const left = document.createElement('div');
+        left.innerHTML = `<div class="fw-bold">${escapeHtml(it['TASK']||it['Task']||'')}</div><div class="small text-muted">${escapeHtml(it['DISH']||'')} — ${escapeHtml(it['COMPONENT']||'')}</div>`;
+        const right = document.createElement('div');
+        const pr = String(it['PRIORITY']||'').toLowerCase();
+        const prClass = pr === 'high' ? 'bg-danger' : pr === 'medium' ? 'bg-warning text-dark' : 'bg-success';
+        right.innerHTML = `<span class="badge ${prClass} ms-2">${escapeHtml(it['PRIORITY']||'')}</span>`;
+        top.appendChild(left); top.appendChild(right);
+        item.appendChild(top);
+
+        const meta = document.createElement('div'); meta.className = 'mt-2 small text-muted';
+        meta.textContent = `Chef: ${it['CHEF']||it['Chef']||''} • ${it['TIME START']||''}–${it['TIME END']||''}`;
+        item.appendChild(meta);
+        list.appendChild(item);
+      }
+
+      cardBody.appendChild(list);
+      card.appendChild(cardBody);
+      col.appendChild(card);
+      board.appendChild(col);
+    }
+  }
 
   function setStatus(msg, err) {
     statusEl.textContent = msg || "";
@@ -241,44 +426,47 @@
       method.cook || "--";
     document.getElementById("ordersDisplay").textContent = d.totalOrders || 0;
 
-    // Handle images (simple grid)
+    // Handle images (simple grid) — optional
     const imageContainer = document.getElementById("recipeImages");
-    if (method.images && method.images.length > 0) {
-      imageContainer.classList.remove("d-none");
-      imageContainer.innerHTML = method.images
-        .map(
-          (img) => `
-        <div class="col-6 col-md-4">
-          <img 
-            src="${img}" 
-            class="img-fluid rounded" 
-            alt="Recipe image" 
-            style="object-fit: cover; max-height: 200px; width: 100%;"
-          >
-        </div>
-      `
-        )
-        .join("");
-    } else {
-      imageContainer.classList.add("d-none");
+    if (imageContainer) {
+      if (method.images && method.images.length > 0) {
+        imageContainer.classList.remove("d-none");
+        imageContainer.innerHTML = method.images
+          .map(
+            (img) => `
+          <div class="col-6 col-md-4">
+            <img 
+              src="${img}" 
+              class="img-fluid rounded" 
+              alt="Recipe image" 
+              style="object-fit: cover; max-height: 200px; width: 100%;"
+            >
+          </div>
+        `
+          )
+          .join("");
+      } else {
+        imageContainer.classList.add("d-none");
+      }
     }
 
-    // Get references to the HTML elements
+    // Optional slider/button controls (guarded)
     const mySlider = document.getElementById("mySlider");
     const sliderValueDisplay = document.getElementById("sliderValueDisplay");
     const myButton = document.getElementById("myButton");
-
-    // Update the displayed slider value when the slider changes
-    mySlider.oninput = function () {
-      sliderValueDisplay.innerHTML = this.value;
-    };
-
-    // Attach an event listener to the button
-    myButton.addEventListener("click", function () {
-      const currentValue = mySlider.value;
-      alert(`Button clicked! Slider value is: ${currentValue}`);
-      const scaledqtyValue = document.getElementById("componentsArea");
-    });
+    if (mySlider && sliderValueDisplay) {
+      // Update the displayed slider value when the slider changes
+      mySlider.oninput = function () {
+        sliderValueDisplay.innerHTML = this.value;
+      };
+    }
+    if (myButton && mySlider) {
+      myButton.addEventListener("click", function () {
+        const currentValue = mySlider.value;
+        alert(`Button clicked! Slider value is: ${currentValue}`);
+        const scaledqtyValue = document.getElementById("componentsArea");
+      });
+    }
 
     // Populate components/ingredients
     const componentsArea = document.getElementById("componentsArea");
@@ -333,16 +521,20 @@
       });
     }
 
-    // Slider input event
-    mySlider.addEventListener("input", updateQuantities);
+    // Slider input event (guarded)
+    if (mySlider) {
+      mySlider.addEventListener("input", updateQuantities);
+      // initialize on load
+      updateQuantities();
+    }
 
-    // initialize on load
-    updateQuantities();
-
-    // Button click example
-    document.getElementById("myButton").addEventListener("click", () => {
-      alert(`Slider value is: ${mySlider.value}`);
-    });
+    // Button click example (guarded)
+    const myButtonEl = document.getElementById("myButton");
+    if(myButtonEl && mySlider){
+      myButtonEl.addEventListener("click", () => {
+        alert(`Slider value is: ${mySlider.value}`);
+      });
+    }
 
     // Populate notes
     const notesSection = document.getElementById("notesSection");

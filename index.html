@@ -23,153 +23,123 @@
     </header>
 
     <main class="container py-3">
-      <div class="d-flex gap-2 mb-3 align-items-center">
-        <label class="btn btn-primary mb-0" for="csvFile"
-          >Upload CSV SHOP</label
-        >
-        <input
-          id="csvFile"
-          type="file"
-          accept="text/csv"
-          style="display: none"
-        />
-        <button id="clearData" class="btn btn-outline-secondary">
-          Clear Stored Data
-        </button>
-        <button
-          id="installBtn"
-          class="btn btn-success ms-auto"
-          style="display: none"
-        >
-          Install
-        </button>
-        <div id="status" role="status" aria-live="polite" class="ms-3"></div>
-      </div>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs mb-4" id="mainTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="shop-tab" data-bs-toggle="tab" data-bs-target="#shop" type="button" role="tab" aria-controls="shop" aria-selected="true">SHOP</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="plan-tab" data-bs-toggle="tab" data-bs-target="#plan" type="button" role="tab" aria-controls="plan" aria-selected="false">PLAN</button>
+          </li>
+        </ul>
 
-      <div class="mb-3">
-        <input
-          id="search"
-          class="form-control form-control-lg"
-          placeholder="Search dishes or category"
-        />
-      </div>
+        <div class="tab-content" id="mainTabContent">
+          <!-- SHOP TAB -->
 
-      <section
-        id="dishList"
-        class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3"
-        aria-live="polite"
-      >
-        <!-- dish cards populated here -->
-      </section>
-
-      <!-- Bootstrap modal for recipe details -->
-      <div class="modal fade" id="recipeModal" tabindex="-1" aria-hidden="true">
-        <div
-          class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-fullscreen-md-down"
-        >
-          <div class="modal-content">
-            <!-- Header -->
-            <div class="modal-header border-0 pb-0">
-              <div class="w-100">
-                <h3 class="modal-title fw-bold mb-2" id="recipeModalLabel">
-                  Recipe Name
-                </h3>
-                <div class="d-flex gap-3 small text-muted">
-                  <span
-                    ><strong>Prep:</strong>
-                    <span id="prepTimeDisplay">--</span></span
-                  >
-                  <span
-                    ><strong>Cook:</strong>
-                    <span id="cookTimeDisplay">--</span></span
-                  >
-                  <span
-                    ><strong>Orders:</strong>
-                    <span id="ordersDisplay">0</span></span
-                  >
-                </div>
-              </div>
-              <button
-                type="button"
-                class="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
+          <div class="tab-pane fade show active" id="shop" role="tabpanel" aria-labelledby="shop-tab">
+            <div class="d-flex gap-2 mb-3 align-items-center">
+              <label class="btn btn-primary mb-0" for="shopCsvFile">Upload CSV SHOP</label>
+              <input id="shopCsvFile" type="file" accept="text/csv" style="display: none" />
+              <button id="clearData" class="btn btn-outline-secondary">Clear Stored Data</button>
+              <button id="installBtn" class="btn btn-success ms-auto" style="display: none">Install</button>
+              <div id="shopStatus" role="status" aria-live="polite" class="ms-3"></div>
             </div>
 
-            <div class="modal-body p-0">
-              <!-- Recipe images -->
-              <div id="recipeImages" class="row g-2 d-none">
-                <!-- Images populated here -->
-              </div>
+            <div class="mb-3">
+              <input id="shopSearch" class="form-control form-control-lg" placeholder="Search dishes or category" />
+            </div>
 
-              <!-- Content area with padding -->
-              <div class="p-4">
-                <!-- Description (if any) -->
-                <div
-                  id="recipeDescription"
-                  class="mb-4 p-3 bg-light rounded d-none"
-                >
-                  <p class="mb-0"></p>
-                </div>
+            <section id="dishList" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3" aria-live="polite">
+              <!-- dish cards populated here -->
+            </section>
 
-               <div class="row g-3">
-                    <div class="col-12">
-                        <label for="mySlider" class="form-label fw-bold">Scale Ingredients</label>
-                        <input
-                        type="range"
-                        class="form-range"
-                        id="mySlider"
-                        min="1"
-                        max="100"
-                        value="1"
-                        step="1"
-                        />
-                        <p class="mt-2">Slider Value: <span id="sliderValueDisplay">1</span></p>
-                        <button class="btn btn-primary mt-2" id="myButton">Perform Action</button>
+            <!-- Bootstrap modal for recipe details -->
+            <div class="modal fade" id="recipeModal" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                  
+                  <div class="modal-header border-0 pb-0">
+                    <div class="w-100">
+                      <h3 class="modal-title fw-bold mb-2" id="recipeModalLabel">Recipe Name</h3>
+                      <div class="d-flex gap-3 small text-muted">
+                        <span><strong>Prep:</strong> <span id="prepTimeDisplay">--</span></span>
+                        <span><strong>Cook:</strong> <span id="cookTimeDisplay">--</span></span>
+                        <span><strong>Orders:</strong> <span id="ordersDisplay">0</span></span>
+                      </div>
                     </div>
-
-                    <!-- LEFT COLUMN: Ingredients -->
-                    <div class="col-md-4">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body" id="recipeContent">
+                    <!-- Description (if any) -->
+                    <div id="recipeDescription" class="mb-4 p-3 bg-light rounded d-none">
+                      <p class="mb-0"></p>
+                    </div>
+                    <div class="row">
+                      <!-- LEFT COLUMN: Ingredients -->
+                      <div class="col-md-4">
                         <div class="border-bottom border-2 border-dark pb-2 mb-3">
-                        <h5 class="fw-bold mb-0">Ingredients</h5>
+                          <h5 class="fw-bold mb-0">Ingredients</h5>
                         </div>
-
                         <div id="componentsArea">
-                        <!-- Components populated here -->
+                          <!-- Components populated here -->
                         </div>
+                      </div>
+                      <!-- RIGHT COLUMN: Instructions -->
+                      <div class="col-md-8">
+                        <div class="border-bottom border-2 border-dark pb-2 mb-3">
+                          <h5 class="fw-bold mb-0">Instructions</h5>
+                        </div>
+                        <!-- Instructions list -->
+                        <ol class="ps-3" id="instructionsList">
+                          <li class="mb-3">Instructions will appear here once you add them below.</li>
+                        </ol>
+                        <!-- Notes Section (optional) -->
+                        <div id="notesSection" class="mt-4 p-3 bg-warning bg-opacity-10 rounded d-none">
+                          <h6 class="fw-bold">Notes</h6>
+                          <div id="notesContent"></div>
+                        </div>
+                      </div>
                     </div>
-                </div>
-                  <!-- RIGHT COLUMN: Instructions -->
-                  <div class="col-md-8">
-                    <div class="border-bottom border-2 border-dark pb-2 mb-3">
-                      <h5 class="fw-bold mb-0">Instructions</h5>
-                    </div>
-
-                    <!-- Instructions list -->
-                    <ol class="ps-3" id="instructionsList">
-                      <li class="mb-3">
-                        Instructions will appear here once you add them below.
-                      </li>
-                    </ol>
-
-                    <!-- Notes Section (optional) -->
-                    <div
-                      id="notesSection"
-                      class="mt-4 p-3 bg-warning bg-opacity-10 rounded d-none"
-                    >
-                      <h6 class="fw-bold">Notes</h6>
-                      <div id="notesContent"></div>
-                    </div>
+                  </div>
+                  <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">Print Recipe</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </main>
+          <!-- PLAN TAB -->
+          <div class="tab-pane fade" id="plan" role="tabpanel" aria-labelledby="plan-tab">
+            <div class="d-flex gap-2 mb-3 align-items-center">
+              <label class="btn btn-primary mb-0" for="planCsvFile">Upload CSV PLAN</label>
+              <input id="planCsvFile" type="file" accept="text/csv" style="display: none" />
+              <button id="clearPlanData" class="btn btn-outline-secondary">Clear PLAN Data</button>
+              <div id="planStatus" role="status" aria-live="polite" class="ms-3"></div>
+            </div>
+            <div class="mb-3">
+              <input id="planSearch" class="form-control form-control-lg" placeholder="Search plan tasks" />
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="small text-muted">Kanban view: tasks grouped by DAY (up to 3 days)</div>
+              <div>
+                <label class="me-2 small">Priority:</label>
+                <select id="planPriorityFilter" class="form-select form-select-sm d-inline-block" style="width: 10rem">
+                  <option value="">All</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+            </div>
 
+            <!-- Kanban board container -->
+            <div id="planBoard" class="row g-3">
+              <!-- JS will populate three columns here -->
+            </div>
+          </div>
+        </div>
+      </main>
     <footer class="footer">
       <small
         >Offline-ready PWA. Built with PapaParse, IndexedDB, and a Service
