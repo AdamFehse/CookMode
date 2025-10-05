@@ -101,7 +101,8 @@ export function renderDishList(dishes, dishList, getDishSliderValue) {
       <div class=\"mt-3 d-flex justify-content-between align-items-center\">
         <div class=\"text-muted\">Orders: <span class=\"orders-value\">...</span></div>
         <button data-id=\"${d.id}\" class=\"btn btn-sm btn-outline-primary open-recipe\">Open</button>
-      </div>`;
+      </div>
+      <div class=\"dish-status-badge-area mt-2\"></div>`;
     col.appendChild(card);
     dishList.appendChild(col);
     // Fetch and update the slider value for this dish
@@ -110,6 +111,36 @@ export function renderDishList(dishes, dishList, getDishSliderValue) {
         const v = (val && !isNaN(val)) ? Number(val) : 1;
         const ordersSpan = card.querySelector('.orders-value');
         if (ordersSpan) ordersSpan.textContent = v;
+      });
+    }
+    // Fetch and show the status badge for this dish
+    if (typeof window.getDishStatus === 'function') {
+      window.getDishStatus(d.id).then(status => {
+        const badgeArea = card.querySelector('.dish-status-badge-area');
+        if (!badgeArea) return;
+        // Status options and badge color logic must match main.js
+        const statusOptions = [
+          { value: '', label: 'No Status' },
+          { value: 'not-yet-done', label: 'NOT YET DONE' },
+          { value: 'prepped', label: 'PREPPED' },
+          { value: 'gathered-together', label: 'GATHERED TOGETHER' },
+          { value: 'cooking', label: 'COOKING' },
+          { value: 'ready-to-plate', label: 'READY TO PLATE' },
+          { value: 'plated', label: 'PLATED' },
+          { value: 'packed', label: 'PACKED' },
+        ];
+        const found = statusOptions.find(o => o.value === status);
+        const label = found && found.value ? found.label : '';
+        let badgeClass = 'badge ms-0 ';
+        badgeClass +=
+          (status === 'not-yet-done' ? 'bg-secondary' :
+           status === 'prepped' ? 'bg-info text-dark' :
+           status === 'gathered-together' ? 'bg-warning text-dark' :
+           status === 'cooking' ? 'bg-primary' :
+           status === 'ready-to-plate' ? 'bg-success' :
+           status === 'plated' ? 'bg-dark' :
+           status === 'packed' ? 'bg-success' : 'bg-light text-dark');
+        badgeArea.innerHTML = label ? `<span class="${badgeClass}">${label}</span>` : '';
       });
     }
   }

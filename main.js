@@ -351,6 +351,8 @@ import { setupPlanEvents } from './events.js';
   });
 
   async function openRecipe(id) {
+  // Load status state for this dish
+  const status = await (typeof getDishStatus === 'function' ? getDishStatus(id) : '');
     const d = await getDishById(id);
     if (!d) return setStatus("Dish not found", true);
 
@@ -362,6 +364,102 @@ import { setupPlanEvents } from './events.js';
     // set modal title
     const modalLabel = document.getElementById("recipeModalLabel");
     if (modalLabel) modalLabel.textContent = d.name;
+
+    // Status dropdown UI
+    const statusOptions = [
+      { value: '', label: 'No Status' },
+      { value: 'not-yet-done', label: 'NOT YET DONE' },
+      { value: 'prepped', label: 'PREPPED' },
+      { value: 'gathered-together', label: 'GATHERED TOGETHER' },
+      { value: 'cooking', label: 'COOKING' },
+      { value: 'ready-to-plate', label: 'READY TO PLATE' },
+      { value: 'plated', label: 'PLATED' },
+      { value: 'packed', label: 'PACKED' },
+    ];
+    let statusRow = document.getElementById('modal-status-row');
+    if (!statusRow) {
+      statusRow = document.createElement('div');
+      statusRow.id = 'modal-status-row';
+      statusRow.className = 'mb-3 d-flex align-items-center';
+      modalLabel.parentNode.insertBefore(statusRow, modalLabel.nextSibling);
+    } else {
+      statusRow.innerHTML = '';
+    }
+    const statusLabel = document.createElement('span');
+    statusLabel.className = 'me-2 fw-bold';
+    statusLabel.textContent = 'Status:';
+    statusRow.appendChild(statusLabel);
+    const statusSelect = document.createElement('select');
+    statusSelect.className = 'form-select form-select-sm w-auto';
+    statusOptions.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt.value;
+      o.textContent = opt.label;
+      statusSelect.appendChild(o);
+    });
+    statusSelect.value = status || '';
+    statusRow.appendChild(statusSelect);
+    // Show current status as badge
+    let statusBadge = document.getElementById('modal-status-badge');
+    if (!statusBadge) {
+      statusBadge = document.createElement('span');
+      statusBadge.id = 'modal-status-badge';
+      statusBadge.className = 'badge ms-3';
+      statusRow.appendChild(statusBadge);
+    }
+    function updateStatusBadge(val) {
+      const found = statusOptions.find(o => o.value === val);
+      statusBadge.textContent = found && found.value ? found.label : '';
+      statusBadge.className = 'badge ms-3 ' +
+        (val === 'not-yet-done' ? 'bg-secondary' :
+         val === 'prepped' ? 'bg-info text-dark' :
+         val === 'gathered-together' ? 'bg-warning text-dark' :
+         val === 'cooking' ? 'bg-primary' :
+         val === 'ready-to-plate' ? 'bg-success' :
+         val === 'plated' ? 'bg-dark' :
+         val === 'packed' ? 'bg-success' : 'bg-light text-dark');
+    }
+    updateStatusBadge(statusSelect.value);
+    statusSelect.addEventListener('change', async function() {
+      // Wait for save to complete before updating UI
+      if (typeof saveDishStatus === 'function') {
+        await saveDishStatus(id, this.value);
+      }
+      updateStatusBadge(this.value);
+      // Update the card's status badge in real time
+      const cardBtn = document.querySelector(`button[data-id='${id}']`);
+      if (cardBtn) {
+        const card = cardBtn.closest('.card');
+        if (card) {
+          const badgeArea = card.querySelector('.dish-status-badge-area');
+          if (badgeArea) {
+            // Status options and badge color logic must match here
+            const statusOptions = [
+              { value: '', label: 'No Status' },
+              { value: 'not-yet-done', label: 'NOT YET DONE' },
+              { value: 'prepped', label: 'PREPPED' },
+              { value: 'gathered-together', label: 'GATHERED TOGETHER' },
+              { value: 'cooking', label: 'COOKING' },
+              { value: 'ready-to-plate', label: 'READY TO PLATE' },
+              { value: 'plated', label: 'PLATED' },
+              { value: 'packed', label: 'PACKED' },
+            ];
+            const found = statusOptions.find(o => o.value === statusSelect.value);
+            const label = found && found.value ? found.label : '';
+            let badgeClass = 'badge ms-0 ';
+            badgeClass +=
+              (statusSelect.value === 'not-yet-done' ? 'bg-secondary' :
+               statusSelect.value === 'prepped' ? 'bg-info text-dark' :
+               statusSelect.value === 'gathered-together' ? 'bg-warning text-dark' :
+               statusSelect.value === 'cooking' ? 'bg-primary' :
+               statusSelect.value === 'ready-to-plate' ? 'bg-success' :
+               statusSelect.value === 'plated' ? 'bg-dark' :
+               statusSelect.value === 'packed' ? 'bg-success' : 'bg-light text-dark');
+            badgeArea.innerHTML = label ? `<span class=\"${badgeClass}\">${label}</span>` : '';
+          }
+        }
+      }
+    });
 
     // Get method from methods.js
     let method = (typeof METHODS !== 'undefined' && METHODS[id]) || null;
@@ -408,7 +506,6 @@ import { setupPlanEvents } from './events.js';
       method.prep || "--";
     document.getElementById("cookTimeDisplay").textContent =
       method.cook || "--";
-    document.getElementById("ordersDisplay").textContent = d.totalOrders || 0;
 
     // Handle images (Bootstrap gallery style)
     const imageContainer = document.getElementById("recipeImages");
@@ -465,9 +562,11 @@ import { setupPlanEvents } from './events.js';
       };
     }
 
-    // Populate components/ingredients
+    // Populate components/ingredients as Bootstrap checklist
     const componentsArea = document.getElementById("componentsArea");
     componentsArea.innerHTML = "";
+    // Load checklist state for this dish
+    const checklistState = await (typeof getDishChecklist === 'function' ? getDishChecklist(id) : {});
     for (const comp of d.components || []) {
       const cdiv = document.createElement("div");
       cdiv.className = "mb-3";
@@ -475,27 +574,64 @@ import { setupPlanEvents } from './events.js';
       h.className = "mb-2 text-secondary fw-bold";
       h.textContent = comp.name;
       cdiv.appendChild(h);
-      const ul = document.createElement("ul");
-      ul.className = "list-unstyled small mb-0";
-
       for (const it of comp.items) {
-        const li = document.createElement("li");
-        li.className = "mb-1";
-        li.dataset.qty = parseFloat(it.qtyPer) || 0;
-        li.dataset.unit = it.unit;
-        li.dataset.ingredient = it.ingredient;
-        li.textContent = `${it.qtyPer} ${it.unit} ${it.ingredient}`;
-        ul.appendChild(li);
+        const ingKey = `${comp.name}::${it.ingredient}`;
+        const checked = checklistState && checklistState[ingKey];
+        const formCheck = document.createElement('div');
+        formCheck.className = 'form-check mb-1';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'form-check-input';
+        checkbox.id = `check-${slug(comp.name)}-${slug(it.ingredient)}`;
+        checkbox.checked = !!checked;
+        // Store base qty/unit/ingredient for scaling
+        checkbox.dataset.baseQty = parseFloat(it.qtyPer) || 0;
+        checkbox.dataset.unit = it.unit;
+        checkbox.dataset.ingredient = it.ingredient;
+        const label = document.createElement('label');
+        label.className = 'form-check-label';
+        label.setAttribute('for', checkbox.id);
+        // Store base qty/unit/ingredient for scaling
+        label.dataset.baseQty = parseFloat(it.qtyPer) || 0;
+        label.dataset.unit = it.unit;
+        label.dataset.ingredient = it.ingredient;
+        label.textContent = `${it.qtyPer} ${it.unit} ${it.ingredient}`;
+        // Apply strikethrough if checked
+        if (checkbox.checked) label.classList.add('text-decoration-line-through');
+        checkbox.addEventListener('change', async function() {
+          checklistState[ingKey] = this.checked;
+          if (this.checked) {
+            label.classList.add('text-decoration-line-through');
+          } else {
+            label.classList.remove('text-decoration-line-through');
+          }
+          if (typeof saveDishChecklist === 'function') await saveDishChecklist(id, checklistState);
+        });
+        formCheck.appendChild(checkbox);
+        formCheck.appendChild(label);
+        cdiv.appendChild(formCheck);
       }
-
-      cdiv.appendChild(ul);
       componentsArea.appendChild(cdiv);
     }
 
-    // Populate instructions
+    // Populate instructions with strikethrough toggle
     const instructionsList = document.getElementById("instructionsList");
+    // Load strikethrough state for this dish
+    const instructionsState = await (typeof getDishInstructionsState === 'function' ? getDishInstructionsState(id) : {});
     if (method.instructions && method.instructions.length > 0) {
-      instructionsList.innerHTML = method.instructions.map((inst) => `<li class="mb-3">${escapeHtml(inst)}</li>`).join("");
+      instructionsList.innerHTML = '';
+      method.instructions.forEach((inst, idx) => {
+        const li = document.createElement('li');
+        li.className = 'mb-3';
+        li.textContent = inst;
+        if (instructionsState[idx]) li.style.textDecoration = 'line-through';
+        li.addEventListener('click', async function() {
+          instructionsState[idx] = !instructionsState[idx];
+          li.style.textDecoration = instructionsState[idx] ? 'line-through' : '';
+          if (typeof saveDishInstructionsState === 'function') await saveDishInstructionsState(id, instructionsState);
+        });
+        instructionsList.appendChild(li);
+      });
     } else {
       instructionsList.innerHTML = '<li class="mb-3 text-muted">No instructions available yet.</li>';
     }
@@ -512,14 +648,14 @@ import { setupPlanEvents } from './events.js';
     function updateQuantities() {
       const scale = parseFloat(mySlider.value);
       sliderValueDisplay.textContent = scale;
-
-      const allItems = componentsArea.querySelectorAll("li[data-qty]");
-      allItems.forEach((li) => {
-        const baseQty = parseFloat(li.dataset.qty) || 0;
-        const unit = li.dataset.unit;
-        const ingredient = li.dataset.ingredient;
+      // Update all ingredient labels
+      const allLabels = componentsArea.querySelectorAll("label.form-check-label");
+      allLabels.forEach((label) => {
+        const baseQty = parseFloat(label.dataset.baseQty) || 0;
+        const unit = label.dataset.unit;
+        const ingredient = label.dataset.ingredient;
         const scaledQty = (baseQty * scale).toFixed(2).replace(/\.00$/, "");
-        li.textContent = `${scaledQty} ${unit} ${ingredient}`;
+        label.textContent = `${scaledQty} ${unit} ${ingredient}`;
       });
     }
 

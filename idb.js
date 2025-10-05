@@ -1,3 +1,85 @@
+// Save status for a dish
+window.saveDishStatus = async function saveDishStatus(id, status) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readwrite');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => {
+      // Merge with any existing settings (checklist, slider, etc.)
+      const record = req.result ? { ...req.result } : { id };
+      record.status = status;
+      tx.objectStore(STORE_SETTINGS).put(record);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Get status for a dish
+window.getDishStatus = async function getDishStatus(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readonly');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => resolve(req.result && req.result.status ? req.result.status : '');
+    req.onerror = () => reject(req.error);
+  });
+}
+// Save checklist state for a dish (ingredients)
+window.saveDishChecklist = async function saveDishChecklist(id, checklist) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readwrite');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => {
+      // Merge with any existing settings
+      const record = req.result ? { ...req.result } : { id };
+      record.checklist = checklist;
+      tx.objectStore(STORE_SETTINGS).put(record);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Get checklist state for a dish
+window.getDishChecklist = async function getDishChecklist(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readonly');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => resolve(req.result && req.result.checklist ? req.result.checklist : {});
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// Save instructions strikethrough state for a dish
+window.saveDishInstructionsState = async function saveDishInstructionsState(id, instructionsState) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readwrite');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => {
+      // Merge with any existing settings
+      const record = req.result ? { ...req.result } : { id };
+      record.instructionsState = instructionsState;
+      tx.objectStore(STORE_SETTINGS).put(record);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Get instructions strikethrough state for a dish
+window.getDishInstructionsState = async function getDishInstructionsState(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readonly');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => resolve(req.result && req.result.instructionsState ? req.result.instructionsState : {});
+    req.onerror = () => reject(req.error);
+  });
+}
 // Minimal IndexedDB helper
 
 const DB_NAME = 'recipecard-db';
@@ -27,7 +109,13 @@ window.saveDishSliderValue = async function saveDishSliderValue(id, value) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_SETTINGS, 'readwrite');
-    tx.objectStore(STORE_SETTINGS).put({ id, slider: value });
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => {
+      // Merge with any existing settings
+      const record = req.result ? { ...req.result } : { id };
+      record.slider = value;
+      tx.objectStore(STORE_SETTINGS).put(record);
+    };
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });

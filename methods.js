@@ -8,7 +8,7 @@ const METHODS = {
     cook: "30-35 min",
     instructions: [
       "Preheat oven to 350°F and line an 8×8 metal pan with parchment paper. Set aside.",
-      "In a medium sized bowl, prepare the flax egg by mixing together 3 tablespoons flaxseed meal and 6 tablespoons water. Set aside for 10 minutes to thicken.",
+      "In a medium sized bowl, prepare the flax egg by mixing together. Set aside for 10 minutes to thicken.",
       "Once the flax egg has thickened, add the almond/peanut butter, cane sugar, almond milk and vanilla extract to the bowl. Mix together until uniform, then add in the gluten free flour, cocoa powder, baking powder and salt. Mix just until uniform; do not overmix.",
       "Transfer about 1/4 of the brownie batter to a small bowl and set aside. Add the remaining brownie batter to the lined pan and spread it out evenly.",
       "Prepare the cheesecake layer: mix the cream cheese alternative and sugar until smooth, then add remaining cheesecake ingredients and mix until smooth. Pour over brownie batter and spread carefully.",
