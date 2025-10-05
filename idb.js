@@ -1,8 +1,10 @@
 // Minimal IndexedDB helper
+
 const DB_NAME = 'recipecard-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3; // bump version for new store
 const STORE_DISH = 'dishes';
 const STORE_PLAN = 'planRows';
+const STORE_SETTINGS = 'dishSettings';
 
 function openDB(){
   return new Promise((resolve, reject)=>{
@@ -16,7 +18,31 @@ function openDB(){
       if(!db.objectStoreNames.contains(STORE_PLAN)){
         db.createObjectStore(STORE_PLAN, { keyPath: 'rowid', autoIncrement: true });
       }
+      if(!db.objectStoreNames.contains(STORE_SETTINGS)){
+        db.createObjectStore(STORE_SETTINGS, { keyPath: 'id' });
+      }
     };
+// Save slider value for a dish
+window.saveDishSliderValue = async function saveDishSliderValue(id, value) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readwrite');
+    tx.objectStore(STORE_SETTINGS).put({ id, slider: value });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Get slider value for a dish
+window.getDishSliderValue = async function getDishSliderValue(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SETTINGS, 'readonly');
+    const req = tx.objectStore(STORE_SETTINGS).get(id);
+    req.onsuccess = () => resolve(req.result ? req.result.slider : null);
+    req.onerror = () => reject(req.error);
+  });
+}
     req.onsuccess = ()=> resolve(req.result);
     req.onerror = ()=> reject(req.error);
   });

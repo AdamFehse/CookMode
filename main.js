@@ -1,5 +1,9 @@
 // main.js — CSV upload, parse, store, UI
 // main.js — CSV upload, parse, store, UI
+import { escapeHtml, slug } from './utils.js';
+import { renderDishList, renderPlanBoard } from './render.js';
+import { groupByDish, applyPlanFilters } from './data.js';
+import { setupPlanEvents } from './events.js';
 (function () {
   // SHOP tab selectors (updated IDs)
   const csvInput = document.getElementById("shopCsvFile");
@@ -16,8 +20,7 @@
   const planCsvInput = document.getElementById('planCsvFile');
   const planStatusEl = document.getElementById('planStatus');
   const planSearch = document.getElementById('planSearch');
-  const planTable = document.getElementById('planTable');
-  const planTableBody = planTable ? planTable.querySelector('tbody') : null;
+  // Removed unused planTable and planTableBody (legacy PLAN table)
   const planBoard = document.getElementById('planBoard');
   const clearPlanBtn = document.getElementById('clearPlanData');
   let planRows = [];
@@ -56,7 +59,6 @@
 
   // Load PLAN data from IndexedDB on page load
   window.addEventListener('load', async () => {
-    // check for the kanban board container (we removed the old table)
     if(planBoard) {
       try {
         const loaded = await getPlanRows();
@@ -86,23 +88,9 @@
     });
   }
 
-  // PLAN search + priority filter
+  // PLAN search + priority filter now handled in events.js
   const priorityFilter = document.getElementById('planPriorityFilter');
-  function applyPlanFilters(){
-    const q = planSearch ? planSearch.value.trim().toLowerCase() : '';
-    const p = priorityFilter ? priorityFilter.value : '';
-    let filtered = planRows || [];
-    if(p) filtered = filtered.filter(r => String(r['PRIORITY']||'').toLowerCase() === p.toLowerCase());
-    if(q) filtered = filtered.filter(row => Object.values(row).some(val => String(val||'').toLowerCase().includes(q)));
-    renderPlanBoard(filtered);
-  }
-
-  if(planSearch){
-    planSearch.addEventListener('input', applyPlanFilters);
-  }
-  if(priorityFilter){
-    priorityFilter.addEventListener('change', applyPlanFilters);
-  }
+  setupPlanEvents(planRows, planSearch, priorityFilter);
 
   // Render PLAN as a 3-column Kanban board grouped by DAY
   function renderPlanBoard(rows){
@@ -213,7 +201,9 @@
         saveDishes(grouped)
           .then(() => {
             setStatus("Data saved locally.");
-            renderDishList(grouped);
+            if (dishList) renderDishList(grouped, dishList, typeof getDishSliderValue !== 'undefined' ? getDishSliderValue : undefined);
+            // keep the shop filter selects in sync after an import
+            if (typeof populateShopFilters === 'function') populateShopFilters(grouped);
           })
           .catch((err) => {
             console.error(err);
@@ -231,6 +221,8 @@
     clearAll().then(() => {
       setStatus("Cleared");
       dishList.innerHTML = "";
+      // reset any shop filters
+      if (typeof populateShopFilters === 'function') populateShopFilters([]);
     });
   });
 
@@ -242,7 +234,7 @@
         d.name.toLowerCase().includes(q) ||
         (d.category || "").toLowerCase().includes(q)
     );
-    renderDishList(filtered);
+  if (dishList) renderDishList(filtered, dishList, typeof getDishSliderValue !== 'undefined' ? getDishSliderValue : undefined);
   });
 
   // modal handled by Bootstrap
@@ -255,7 +247,14 @@
         .then(() => console.log("sw registered"));
     }
     const all = await getAllDishes();
-    if (all && all.length) renderDishList(all);
+    if (all && all.length) {
+      if (dishList) renderDishList(all, dishList, typeof getDishSliderValue !== 'undefined' ? getDishSliderValue : undefined);
+      // populate shop filter selects from the saved dishes on startup
+      if (typeof populateShopFilters === 'function') populateShopFilters(all);
+    } else {
+      // ensure filters are cleared when no dishes
+      if (typeof populateShopFilters === 'function') populateShopFilters([]);
+    }
   });
 
   // PWA install prompt handling
@@ -286,113 +285,61 @@
     setStatus("App installed");
   });
 
-  function groupByDish(rows) {
-    // expected columns: '# OF ORDERS', 'CATEGORY','DISH','COMPONENT','INGREDIENT','QUANTITY PER SERVING','UNIT', ...
-    const map = new Map();
-    for (const r of rows) {
-      const name = (r["DISH"] || r["Dish"] || r["dish"] || "").trim();
-      if (!name) continue;
-      const cat = r["CATEGORY"] || r["Category"] || r["category"] || "";
-      // Important: orders belongs to the dish level, but each ingredient row may repeat the same order count.
-      // We'll take the maximum orders seen for that dish (or sum only if you have per-ingredient orders differently).
-      const orders =
-        Number(r["# OF ORDERS"] || r["Orders"] || r["orders"] || 0) || 0;
-      const comp = (
-        r["COMPONENT"] ||
-        r["Component"] ||
-        r["component"] ||
-        "Main"
-      ).trim();
-      const ingredient = (
-        r["INGREDIENT"] ||
-        r["Ingredient"] ||
-        r["ingredient"] ||
-        ""
-      ).trim();
-      const qtyPer =
-        r["QUANTITY PER SERVING"] ||
-        r["Quantity per serving"] ||
-        r["QUANTITY PER SERVING"] ||
-        "";
-      const unit = r["UNIT"] || r["Unit"] || r["unit"] || "";
 
-      if (!map.has(name)) {
-        map.set(name, {
-          id: slug(name),
-          name,
-          category: cat,
-          totalOrders: 0,
-          components: new Map(),
-          method: "",
-        });
-      }
-      const entry = map.get(name);
-      // Use max to avoid summing the same order count across ingredient rows
-      entry.totalOrders = Math.max(entry.totalOrders || 0, orders);
-      if (!entry.components.has(comp)) entry.components.set(comp, []);
-      entry.components.get(comp).push({ ingredient, qtyPer, unit });
-    }
+  // escapeHtml, slug, and renderDishList are now imported from utils.js and render.js
 
-    // convert components map to array
-    const dishes = [];
-    for (const v of map.values()) {
-      const components = [];
-      for (const [k, list] of v.components.entries())
-        components.push({ name: k, items: list });
-      dishes.push({
-        id: v.id,
-        name: v.name,
-        category: v.category,
-        totalOrders: v.totalOrders,
-        components,
-        method: v.method,
-        prepTime: v.prepTime,
-        cookTime: v.cookTime,
-      });
+  // Filters for SHOP
+  const filterCategory = document.getElementById('filterCategory');
+  const filterComponent = document.getElementById('filterComponent');
+  const filterDish = document.getElementById('filterDish');
+
+  function populateShopFilters(dishes){
+    if(!dishes) dishes = [];
+    const cats = new Set();
+    const comps = new Set();
+    const names = new Set();
+    for(const d of dishes){
+      if(d.category) cats.add(d.category);
+      names.add(d.name);
+      for(const c of d.components||[]) comps.add(c.name);
     }
-    return dishes;
+    // helper to fill select
+    function fill(select, items, placeholder){
+      if(!select) return;
+      const val = select.value || '';
+      select.innerHTML = `<option value="">${placeholder}</option>` + [...items].sort().map(i=>`<option value="${escapeHtml(i)}">${escapeHtml(i)}</option>`).join('');
+      if(val) select.value = val;
+    }
+    fill(filterCategory, cats, 'All categories');
+    fill(filterComponent, comps, 'All components');
+    fill(filterDish, names, 'All dishes');
   }
 
-  function slug(str) {
-    return str
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-  }
+  
 
-  function renderDishList(dishes) {
-    dishList.innerHTML = "";
-    if (!dishes || !dishes.length) {
-      dishList.innerHTML = "<p>No dishes yet. Upload a CSV to get started.</p>";
-      return;
-    }
-    dishes.sort((a, b) => a.name.localeCompare(b.name));
-    for (const d of dishes) {
-      const col = document.createElement("div");
-      col.className = "col";
-      const card = document.createElement("div");
-      card.className = "card h-100 p-3";
-      card.innerHTML = `<div>
-          <h3 class="h5 mb-1">${escapeHtml(d.name)}</h3>
-          <div class="text-muted small">${escapeHtml(d.category || "")}</div>
-          <div class="small text-monospace text-muted mt-1">slug: <code>${escapeHtml(
-            d.id
-          )}</code>
-          </div>
-        </div>
-        <div class="mt-3 d-flex justify-content-between align-items-center">
-          <div class="text-muted">Orders: <strong>${
-            d.totalOrders
-          }</strong></div>
-          <button data-id="${
-            d.id
-          }" class="btn btn-sm btn-outline-primary open-recipe">Open</button>
-        </div>`;
-      col.appendChild(card);
-      dishList.appendChild(col);
-    }
-    // ensure dishList is focusable for delegation
-    dishList.tabIndex = -1;
+  // Hook filters to re-render
+  if(filterCategory) filterCategory.addEventListener('change', async ()=>{
+    const all = await getAllDishes(); applyShopFilters(all);
+  });
+  if(filterComponent) filterComponent.addEventListener('change', async ()=>{
+    const all = await getAllDishes(); applyShopFilters(all);
+  });
+  if(filterDish) filterDish.addEventListener('change', async ()=>{
+    const all = await getAllDishes(); applyShopFilters(all);
+  });
+
+  async function applyShopFilters(dishes){
+    const all = dishes || await getAllDishes();
+    const q = search ? search.value.trim().toLowerCase() : '';
+    const cat = filterCategory ? filterCategory.value : '';
+    const comp = filterComponent ? filterComponent.value : '';
+    const name = filterDish ? filterDish.value : '';
+    let filtered = all.slice();
+    if(cat) filtered = filtered.filter(d=> (d.category||'') === cat);
+    if(name) filtered = filtered.filter(d=> d.name === name);
+    if(comp) filtered = filtered.filter(d=> (d.components||[]).some(c=> c.name === comp));
+    if(q) filtered = filtered.filter(d=> d.name.toLowerCase().includes(q) || (d.category||'').toLowerCase().includes(q));
+  if (dishList) renderDishList(filtered, dishList, typeof getDishSliderValue !== 'undefined' ? getDishSliderValue : undefined);
   }
 
   // Use event delegation for Open buttons so dynamic changes won't break handlers
@@ -417,7 +364,44 @@
     if (modalLabel) modalLabel.textContent = d.name;
 
     // Get method from methods.js
-    const method = METHODS[id] || {};
+    let method = (typeof METHODS !== 'undefined' && METHODS[id]) || null;
+    // Try slugified dish name if exact id key not present
+    if (!method) {
+      const slugName = slug(d.name || '');
+      if (slugName && typeof METHODS !== 'undefined' && METHODS[slugName]) method = METHODS[slugName];
+    }
+    // Loose fallback: find a METHODS key that contains the dish name slug or vice versa
+    if (!method && typeof METHODS !== 'undefined') {
+      const keys = Object.keys(METHODS || {});
+      const nameNorm = (d.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      for (const k of keys) {
+        if (!k) continue;
+        if (k === nameNorm || k.includes(nameNorm) || nameNorm.includes(k)) {
+          method = METHODS[k];
+          break;
+        }
+      }
+    }
+    // Alias lookup: if a METHOD_ALIASES mapping exists, use it to resolve dish id -> method key
+    if (!method && typeof METHOD_ALIASES !== 'undefined') {
+      try {
+        const aliasKey = METHOD_ALIASES[id] || METHOD_ALIASES[d.id] || METHOD_ALIASES[slug(d.name||'')];
+        if (aliasKey && typeof METHODS !== 'undefined' && METHODS[aliasKey]) {
+          method = METHODS[aliasKey];
+          usedMethodKey = aliasKey;
+        }
+      } catch (e){ /* ignore alias errors */ }
+    }
+    let usedMethodKey = null;
+    if (!method) {
+      method = {};
+      console.info(`No METHOD found for dish id='${id}' name='${d.name}' — check methods.js keys`);
+    } else {
+      // try to recover the key used
+      for(const k of Object.keys(METHODS||{})){
+        if(METHODS[k] === method){ usedMethodKey = k; break; }
+      }
+    }
 
     // Update header info
     document.getElementById("prepTimeDisplay").textContent =
@@ -426,46 +410,59 @@
       method.cook || "--";
     document.getElementById("ordersDisplay").textContent = d.totalOrders || 0;
 
-    // Handle images (simple grid) — optional
+    // Handle images (Bootstrap gallery style)
     const imageContainer = document.getElementById("recipeImages");
     if (imageContainer) {
       if (method.images && method.images.length > 0) {
         imageContainer.classList.remove("d-none");
-        imageContainer.innerHTML = method.images
+        // Render images in 3 columns, Bootstrap utility classes only
+        const colCount = 3;
+        const cols = Array.from({ length: colCount }, () => []);
+        method.images.forEach((img, i) => {
+          cols[i % colCount].push(img);
+        });
+        imageContainer.innerHTML = cols
           .map(
-            (img) => `
-          <div class="col-6 col-md-4">
-            <img 
-              src="${img}" 
-              class="img-fluid rounded" 
-              alt="Recipe image" 
-              style="object-fit: cover; max-height: 200px; width: 100%;"
-            >
-          </div>
-        `
+            (colImgs) =>
+              `<div class="col-lg-4 col-md-6 mb-4 mb-lg-0">` +
+              colImgs
+                .map(
+                  (img) =>
+                    `<img src="${img}" class="w-100 shadow-1-strong rounded mb-4" style="object-fit:cover;max-height:220px;" alt="Recipe image">`
+                )
+                .join("") +
+              `</div>`
           )
           .join("");
       } else {
         imageContainer.classList.add("d-none");
+        imageContainer.innerHTML = '';
       }
     }
 
-    // Optional slider/button controls (guarded)
+    // Optional slider controls (guarded)
     const mySlider = document.getElementById("mySlider");
     const sliderValueDisplay = document.getElementById("sliderValueDisplay");
-    const myButton = document.getElementById("myButton");
     if (mySlider && sliderValueDisplay) {
-      // Update the displayed slider value when the slider changes
+      // Load persisted slider value for this dish
+      getDishSliderValue(id).then(val => {
+        const sliderVal = (val && !isNaN(val)) ? Number(val) : 1;
+        mySlider.value = sliderVal;
+        sliderValueDisplay.textContent = sliderVal;
+        updateQuantities();
+      });
+      // Update the displayed slider value and persist on change
       mySlider.oninput = function () {
         sliderValueDisplay.innerHTML = this.value;
+        saveDishSliderValue(id, this.value);
+        updateQuantities();
+        // Also update the Orders value on the card immediately
+        const card = document.querySelector(`button[data-id='${id}']`);
+        if (card) {
+          const ordersSpan = card.closest('.card').querySelector('.orders-value');
+          if (ordersSpan) ordersSpan.textContent = this.value;
+        }
       };
-    }
-    if (myButton && mySlider) {
-      myButton.addEventListener("click", function () {
-        const currentValue = mySlider.value;
-        alert(`Button clicked! Slider value is: ${currentValue}`);
-        const scaledqtyValue = document.getElementById("componentsArea");
-      });
     }
 
     // Populate components/ingredients
@@ -498,12 +495,17 @@
     // Populate instructions
     const instructionsList = document.getElementById("instructionsList");
     if (method.instructions && method.instructions.length > 0) {
-      instructionsList.innerHTML = method.instructions
-        .map((inst) => `<li class="mb-3">${escapeHtml(inst)}</li>`)
-        .join("");
+      instructionsList.innerHTML = method.instructions.map((inst) => `<li class="mb-3">${escapeHtml(inst)}</li>`).join("");
     } else {
-      instructionsList.innerHTML =
-        '<li class="mb-3 text-muted">No instructions available yet.</li>';
+      instructionsList.innerHTML = '<li class="mb-3 text-muted">No instructions available yet.</li>';
+    }
+
+    // Show which METHODS key provided the instructions (if any)
+    const methodSourceEl = document.getElementById('methodSource');
+    if(methodSourceEl){
+      if(usedMethodKey){ methodSourceEl.style.display = 'block'; methodSourceEl.textContent = `Method source: ${usedMethodKey}`; }
+      else if(method.instructions && method.instructions.length) { methodSourceEl.style.display = 'block'; methodSourceEl.textContent = `Method source: (provided inline)`; }
+      else { methodSourceEl.style.display = 'none'; methodSourceEl.textContent = ''; }
     }
 
     // Function to update quantities based on slider
@@ -528,13 +530,7 @@
       updateQuantities();
     }
 
-    // Button click example (guarded)
-    const myButtonEl = document.getElementById("myButton");
-    if(myButtonEl && mySlider){
-      myButtonEl.addEventListener("click", () => {
-        alert(`Slider value is: ${mySlider.value}`);
-      });
-    }
+    // (print/button removed; slider-only behavior remains guarded above)
 
     // Populate notes
     const notesSection = document.getElementById("notesSection");

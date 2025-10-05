@@ -1,5 +1,2 @@
-/* No custom CSS: relying on Bootstrap utility classes only. */
 
-@media print{
-  header, .btn { display:none !important }
-}
+
