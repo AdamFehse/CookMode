@@ -1,3 +1,5 @@
+import { setupMethodAndImages, setupInstructions } from './modal.js';
+import { METHODS } from './methods.js';
 // openRecipe.js — Handles opening the recipe modal for a dish by id
 // This is extracted for modularity and global access
 
@@ -25,6 +27,10 @@ export async function openRecipe(id) {
   const chef = await getDishChef(id);
   const d = await getDishById(id);
   if (!d) return;
+
+  // Render method and instructions in the modal
+  setupMethodAndImages(d, id, METHODS);
+  setupInstructions(d, id, METHODS);
 
   // Ensure modal is in document.body and only initialized once
   const recipeModalEl = document.getElementById('recipeModal');

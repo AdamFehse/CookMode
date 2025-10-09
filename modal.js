@@ -1,5 +1,6 @@
 // modal.js — Recipe modal management
 import { slug, escapeHtml } from './utils.js';
+import { METHODS } from './methods.js';
 import {
   getDishById,
   getDishSliderValue,
@@ -253,16 +254,18 @@ function setupStatusAndChefBadges(statusRow, statusSelect, chefSelect, statusOpt
   });
 }
 
-function setupMethodAndImages(d, id) {
+export function setupMethodAndImages(d, id, METHODS) {
+  console.log('setupMethodAndImages called', d, id);
   // Get method from methods.js
+  console.log('[MODAL] Looking up method for:', { id, name: d.name });
   let method = (typeof METHODS !== 'undefined' && METHODS[id]) || null;
-  
+  console.log('[MODAL] METHODS[id]:', METHODS[id]);
   // Try slugified dish name if exact id key not present
   if (!method) {
     const slugName = slug(d.name || '');
+    console.log('[MODAL] Trying slug:', slugName, METHODS[slugName]);
     if (slugName && typeof METHODS !== 'undefined' && METHODS[slugName]) method = METHODS[slugName];
   }
-  
   // Loose fallback: find a METHODS key that contains the dish name slug or vice versa
   if (!method && typeof METHODS !== 'undefined') {
     const keys = Object.keys(METHODS || {});
@@ -270,31 +273,32 @@ function setupMethodAndImages(d, id) {
     for (const k of keys) {
       if (!k) continue;
       if (k === nameNorm || k.includes(nameNorm) || nameNorm.includes(k)) {
+        console.log('[MODAL] Fallback match:', k, METHODS[k]);
         method = METHODS[k];
         break;
       }
     }
   }
-  
   // Alias lookup: if a METHOD_ALIASES mapping exists, use it to resolve dish id -> method key
   if (!method && typeof METHOD_ALIASES !== 'undefined') {
     try {
       const aliasKey = METHOD_ALIASES[id] || METHOD_ALIASES[d.id] || METHOD_ALIASES[slug(d.name||'')];
+      console.log('[MODAL] Alias lookup:', aliasKey, METHODS[aliasKey]);
       if (aliasKey && typeof METHODS !== 'undefined' && METHODS[aliasKey]) {
         method = METHODS[aliasKey];
       }
     } catch (e){ /* ignore alias errors */ }
   }
-  
   let usedMethodKey = null;
   if (!method) {
     method = {};
-    console.info(`No METHOD found for dish id='${id}' name='${d.name}' — check methods.js keys`);
+    console.info(`No METHOD found for dish id='${id}' name='${d.name}'  check methods.js keys`);
   } else {
     // try to recover the key used
     for(const k of Object.keys(METHODS||{})){
       if(METHODS[k] === method){ usedMethodKey = k; break; }
     }
+    console.log('[MODAL] Used method key:', usedMethodKey);
   }
 
   // Update header info
@@ -429,7 +433,9 @@ async function populateIngredients(d, id) {
   });
 }
 
-async function setupInstructions(d, id) {
+export async function setupInstructions(d, id, METHODS) {
+  // Use the same lookup logic as setupMethodAndImages to get the method
+  // method is already defined in setupMethodAndImages, so do not redeclare here
   // Get method for instructions
   let method = (typeof METHODS !== 'undefined' && METHODS[id]) || {};
   
