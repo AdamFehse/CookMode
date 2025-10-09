@@ -1,5 +1,5 @@
 // Bump this version on every deploy to force update
-const CACHE_NAME = 'recipecard-static-v5';
+const CACHE_NAME = 'recipecard-static-v6';
 
 const urlsToCache = [
   './',
