@@ -125,7 +125,6 @@ export async function openRecipe(id) {
     { value: '', label: 'No Chef' },
     { value: 'ADAM', label: 'ADAM' },
     { value: 'EMILY', label: 'EMILY' },
-    { value: 'EVA', label: 'EVA' },
     { value: 'PRANAV', label: 'PRANAV' },
     { value: 'CHEF A', label: 'CHEF A' },
     { value: 'CHEF B', label: 'CHEF B' },
@@ -158,7 +157,6 @@ export async function openRecipe(id) {
     switch(val) {
       case 'ADAM': return 'badge ms-3 bg-primary';
       case 'EMILY': return 'badge ms-3 bg-success';
-      case 'EVA': return 'badge ms-3 bg-warning text-dark';
       case 'PRANAV': return 'badge ms-3 bg-danger';
       case 'CHEF A': return 'badge ms-3 bg-info text-dark';
       case 'CHEF B': return 'badge ms-3 bg-secondary';
