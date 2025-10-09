@@ -416,8 +416,7 @@ export async function renderPlanBoard(rows) {
 function getChefEmoji(chef) {
   const badges = {
     'ADAM': '🟦',
-    'EMILY': '🟩', 
-    'EVA': '🟨',
+    'EMILY': '🟩',
     'PRANAV': '🟥',
     'CHEF A': '🟪',
     'CHEF B': '⬛',
@@ -457,7 +456,6 @@ function renderChefBadge(container, chef) {
     { value: '', label: 'No Chef' },
     { value: 'ADAM', label: 'ADAM' },
     { value: 'EMILY', label: 'EMILY' },
-    { value: 'EVA', label: 'EVA' },
     { value: 'PRANAV', label: 'PRANAV' },
     { value: 'CHEF A', label: 'CHEF A' },
     { value: 'CHEF B', label: 'CHEF B' },
@@ -468,7 +466,6 @@ function renderChefBadge(container, chef) {
     switch (val) {
       case 'ADAM': return 'badge ms-0 me-2 bg-primary';
       case 'EMILY': return 'badge ms-0 me-2 bg-success';
-      case 'EVA': return 'badge ms-0 me-2 bg-warning text-dark';
       case 'PRANAV': return 'badge ms-0 me-2 bg-danger';
       case 'CHEF A': return 'badge ms-0 me-2 bg-info text-dark';
       case 'CHEF B': return 'badge ms-0 me-2 bg-secondary';
