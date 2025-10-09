@@ -10,11 +10,23 @@ export let planRows = [];
 
 // Initialize application
 export async function initializeApp() {
-  // Service worker registration
+  // Service worker registration with update protection
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("./sw.js")
-      .then(() => console.log("sw registered"));
+      .then(reg => {
+        console.log("sw registered");
+        // Listen for updates and reload when a new SW is installed
+        reg.onupdatefound = () => {
+          const newWorker = reg.installing;
+          newWorker.onstatechange = () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New update available, reload to get it
+              window.location.reload();
+            }
+          };
+        };
+      });
   }
 
   // Load initial data

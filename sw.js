@@ -1,4 +1,5 @@
-const CACHE_NAME = 'recipecard-static-v1';
+// Bump this version on every deploy to force update
+const CACHE_NAME = 'recipecard-static-v2';
 
 const urlsToCache = [
   './',
@@ -16,6 +17,7 @@ const urlsToCache = [
 
 // Install event - cache resources robustly
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Activate new SW immediately
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       const results = await Promise.allSettled(
@@ -32,7 +34,6 @@ self.addEventListener('install', (event) => {
           }
         })
       );
-
       // Log failures for diagnostics but continue
       results.forEach(r => {
         if (r.status === 'rejected') console.log('Cache promise rejected', r.reason);
