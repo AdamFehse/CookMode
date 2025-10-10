@@ -49,5 +49,32 @@ window.addEventListener('DOMContentLoaded', async () => {
       renderPlanBoard(rows);
     });
   }
+  
+    // Add Clear Data button handler
+    const clearDataBtn = document.getElementById('clearData');
+    if (clearDataBtn) {
+      clearDataBtn.addEventListener('click', async () => {
+        if (confirm('Are you sure you want to clear all SHOP data? This cannot be undone.')) {
+          const { clearAll, getAllDishes } = await import('./idb.js');
+          await clearAll();
+          // Optionally re-render the dish list and filters
+          const { renderDishList } = await import('./render.js');
+          const dishes = await getAllDishes();
+          const dishList = document.getElementById('dishList');
+          if (dishList && typeof renderDishList === 'function') renderDishList(dishes, dishList);
+          // Optionally update filters
+          const { populateShopFilters } = await import('./data.js');
+          if (typeof populateShopFilters === 'function') populateShopFilters([]);
+          // Optionally update dashboard
+          if (typeof window.renderPrepDashboard === 'function') window.renderPrepDashboard();
+          // Optionally show status
+          const shopStatus = document.getElementById('shopStatus');
+          if (shopStatus) shopStatus.textContent = 'All SHOP data cleared.';
+          // Reset the file input so user can re-upload the same file
+          const shopCsvInput = document.getElementById('shopCsvFile');
+          if (shopCsvInput) shopCsvInput.value = '';
+        }
+      });
+    }
 });
 
