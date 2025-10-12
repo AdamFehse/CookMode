@@ -30,6 +30,7 @@ export async function renderPrepDashboard(containerId = 'prepDashboard') {
   const ingredientTotals = {};
   const ingredientChecked = {};
   const ingredientRefs = {};
+  let totalIngredients = 0, assignedIngredients = 0, completedIngredients = 0;
   for (const dish of chefAssignedDishes) {
     const dishId = dish.id;
     let orders = 1;
@@ -56,7 +57,42 @@ export async function renderPrepDashboard(containerId = 'prepDashboard') {
       }
     }
   }
-  // Render summary with checkboxes (totals always shown)
+  // Calculate dashboard stats
+  totalIngredients = Object.keys(ingredientTotals).length;
+  assignedIngredients = Object.values(ingredientChecked).filter(Boolean).length;
+  completedIngredients = assignedIngredients; // For now, same as assigned
+
+  // --- DASHBOARD HEADER CARDS ---
+  const summaryRow = document.createElement('div');
+  summaryRow.className = 'row g-3 mb-3';
+  summaryRow.innerHTML = `
+    <div class="col-md-4">
+      <div class="card text-bg-primary h-100">
+        <div class="card-body text-center">
+          <div class="fs-2 fw-bold">${totalIngredients}</div>
+          <div class="small">Total Ingredients</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-success h-100">
+        <div class="card-body text-center">
+          <div class="fs-2 fw-bold">${assignedIngredients}</div>
+          <div class="small">Assigned/Needed</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-secondary h-100">
+        <div class="card-body text-center">
+          <div class="fs-2 fw-bold">${completedIngredients}</div>
+          <div class="small">Completed (All Checked)</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // --- INGREDIENT GRID ---
   let dashboardCard = document.createElement('div');
   dashboardCard.className = 'card mb-3';
   dashboardCard.innerHTML = '<div class="card-header bg-success text-white">🧮 Ingredient Dashboard: Total Needed (assigned only)</div>';
@@ -88,15 +124,23 @@ export async function renderPrepDashboard(containerId = 'prepDashboard') {
         }
         // Update other UIs as before
         if (typeof window.renderChefPrepList === 'function') window.renderChefPrepList();
+        // Live update dashboard summary cards
+        if (typeof window.renderPrepDashboard === 'function') window.renderPrepDashboard();
         // Modal and PLAN board update as before
       }
     });
+    // Add a badge and progress bar for each ingredient
+    const statusBadge = document.createElement('span');
+    statusBadge.className = `badge rounded-pill ms-2 ${ingredientChecked[ingredient] ? 'bg-success' : 'bg-warning text-dark'}`;
+    statusBadge.textContent = ingredientChecked[ingredient] ? 'Ready' : 'Needed';
     col.appendChild(checklist);
+    col.appendChild(statusBadge);
     grid.appendChild(col);
   }
   cardBody.appendChild(grid);
   dashboardCard.appendChild(cardBody);
   container.innerHTML = '';
+  container.appendChild(summaryRow);
   container.appendChild(dashboardCard);
   // Restore scroll position
   window.scrollTo({ top: scrollY });

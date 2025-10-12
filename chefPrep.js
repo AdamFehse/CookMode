@@ -50,20 +50,30 @@ export async function renderChefPrepList(getAllDishes, getDishChef, getDishSlide
       const col = document.createElement('div');
       col.className = 'col';
       const card = document.createElement('div');
-      card.className = 'mb-3 card h-100';
+      card.className = 'mb-3 card h-100 border-3 border-primary';
+      // Card header with chef name and badge
+      const cardHeader = document.createElement('div');
+      cardHeader.className = 'card-header bg-primary text-white d-flex align-items-center justify-content-between';
+      cardHeader.innerHTML = `<span>👨‍🍳 <strong>${chef}</strong></span><span class="badge bg-light text-primary">${dishList.length} dish${dishList.length !== 1 ? 'es' : ''}</span>`;
+      card.appendChild(cardHeader);
       const cardBody = document.createElement('div');
       cardBody.className = 'card-body';
-      const chefTitle = document.createElement('h6');
-      chefTitle.className = 'fw-bold text-primary mb-1';
-      chefTitle.textContent = `👨‍🍳 ${chef}`;
-      cardBody.appendChild(chefTitle);
       for (const { dish, dishId, orders } of dishList) {
         const dishDiv = document.createElement('div');
-        dishDiv.className = 'mb-2';
+        dishDiv.className = 'mb-3 p-2 border rounded bg-light';
+        // Dish title row with badge
+        const dishTitleRow = document.createElement('div');
+        dishTitleRow.className = 'd-flex align-items-center justify-content-between mb-1';
         const dishTitle = document.createElement('div');
-        dishTitle.className = 'fw-bold small mb-1';
+        dishTitle.className = 'fw-bold small';
         dishTitle.textContent = dish.name;
-        dishDiv.appendChild(dishTitle);
+        // Orders badge
+        const ordersBadge = document.createElement('span');
+        ordersBadge.className = 'badge bg-secondary ms-2';
+        ordersBadge.textContent = `x${orders}`;
+        dishTitleRow.appendChild(dishTitle);
+        dishTitleRow.appendChild(ordersBadge);
+        dishDiv.appendChild(dishTitleRow);
         const checklistState = await getDishChecklist(dishId);
         // Use shared checklist renderer
         const checklist = createIngredientChecklistHTML({

@@ -168,7 +168,7 @@ export const METHODS = {
     ]
   },
 
-  "truffle-whipped-mashed-potatoes": {
+  "truffled-mashed-potatoes": {
     "prep": "15 min",
     "cook": "15 min",
     "instructions": [
@@ -216,13 +216,10 @@ export const METHODS = {
     ],
     "notes": "These roasted vegetables are perfect as a side dish or tossed into grain bowls. Adjust herbs as desired for flavor variation.",
     "images": [
-      "https://www.allrecipes.com/thmb/Y8N4F6v-j_WhNlAOH8AgM2A6oMU=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format/webp/AR-RM-9377-roasted-vegetables-ddmfs-step1-3x4-78119d6ecb914e219a08368b8fa17010.jpg",
-      "https://www.allrecipes.com/thmb/wWUDm-HKDaA2wmykQ2O_cRmtQm0=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format/webp/AR-RM-9377-roasted-vegetables-ddmfs-step2-3x4-3c365614c36044e6bc1500a0e45af12c.jpg",
-      "https://www.allrecipes.com/thmb/pBzkiJMc7ncWgyyaiW-XrZSqshM=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format/webp/AR-RM-9377-roasted-vegetables-ddmfs-step3-3x4-6ce66ba0f6cd448792d24ae23e2ad428.jpg",
-      "https://www.allrecipes.com/thmb/KFl9lLnWkCbyqRkMU3WOGoOa8yk=/750x0/filters:no_upscale():max_bytes(150000):strip_icc():format/webp/AR-RM-9377-roasted-vegetables-ddmfs-step5-3x4-1e61125c8965487b8783b521ce702a8d.jpg",
+      "https://tastefulkitchen.com/wp-content/uploads/2025/07/AR-RM-9377-roasted-vegetables-ddmfs-3x4-3e3d96780e454d158612230868797112.jpg"
     ]
   },
-  "edamame-sea-salt": {
+  "edamame-and-sea-salt": {
     "prep": "5 min",
     "cook": "5 min",
     "instructions": [
