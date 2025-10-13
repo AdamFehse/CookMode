@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../REACT_COOK_MODE"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "RecipeCard"
+	}
+}

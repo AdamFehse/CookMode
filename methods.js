@@ -110,7 +110,7 @@ export const METHODS = {
       "https://www.tasteofhome.com/wp-content/uploads/2024/08/Smoky-Sweet-Potato-and-Black-Bean-Enchiladas_TOHD24_189973_MollyBolton_.jpg?fit=700%2C1024",
     ]
   },
-  "creamy-green-bean-mushroom-casserole": {
+  "green-bean-mushroom-casserole": {
     "prep": "25 min",
     "cook": "25 min",
     "instructions": [
